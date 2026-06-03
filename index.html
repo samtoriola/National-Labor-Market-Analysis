@@ -1,0 +1,1041 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import numpy as np
+
+# ── Page config ────────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="LMI Dashboard",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ── Custom CSS ──────────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background-color: #0d1f2d;
+    border-right: 1px solid #1e3448;
+}
+[data-testid="stSidebar"] * {
+    color: #c9d8e8 !important;
+}
+[data-testid="stSidebar"] .stRadio label {
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+}
+[data-testid="stSidebar"] h1 {
+    font-family: 'DM Serif Display', serif !important;
+    font-size: 1.15rem !important;
+    color: #e8f1fa !important;
+    letter-spacing: 0.01em;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid #1e3448;
+    margin-bottom: 0.75rem;
+}
+[data-testid="stSidebar"] .stRadio [data-testid="stMarkdownContainer"] p {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5b7a95 !important;
+    margin-top: 1rem;
+    margin-bottom: 0.2rem;
+}
+
+/* Main area */
+.main .block-container {
+    padding-top: 1.5rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    max-width: 1400px;
+}
+
+/* Filter bar */
+.filter-bar {
+    background: #f7f9fc;
+    border: 1px solid #e3eaf2;
+    border-radius: 10px;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1.4rem;
+}
+
+/* Metric cards */
+.metric-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 1.2rem;
+}
+.metric-card {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #e3eaf2;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    border-left: 4px solid #1a7fc1;
+}
+.metric-card.green  { border-left-color: #12b76a; }
+.metric-card.amber  { border-left-color: #f79009; }
+.metric-card.teal   { border-left-color: #0d9488; }
+.metric-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #6b7f91;
+    margin-bottom: 0.2rem;
+}
+.metric-value {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #0d1f2d;
+    line-height: 1.1;
+}
+.metric-sub {
+    font-size: 0.72rem;
+    color: #8ca0b3;
+    margin-top: 0.15rem;
+}
+
+/* Section headers */
+.section-header {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.05rem;
+    color: #0d1f2d;
+    margin-bottom: 0.1rem;
+}
+.section-sub {
+    font-size: 0.75rem;
+    color: #8ca0b3;
+    margin-bottom: 0.8rem;
+}
+
+/* Active nav item highlight */
+section[data-testid="stSidebar"] .stRadio > label {
+    background: transparent !important;
+}
+
+div[data-testid="stSelectbox"] > div,
+div[data-testid="stMultiSelect"] > div {
+    border-radius: 8px;
+}
+
+/* Data source tag */
+.datasource {
+    font-size: 0.65rem;
+    color: #a0b4c6;
+    text-align: right;
+    margin-top: 0.5rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ── SOC / NAICS lookup tables ───────────────────────────────────────────────────
+SOC_MAJOR = {
+    '11': 'Management',
+    '13': 'Business & Financial Operations',
+    '15': 'Computer & Mathematical',
+    '17': 'Architecture & Engineering',
+    '19': 'Life, Physical & Social Science',
+    '21': 'Community & Social Service',
+    '23': 'Legal',
+    '25': 'Educational Instruction',
+    '27': 'Arts, Design & Entertainment',
+    '29': 'Healthcare Practitioners & Technical',
+    '31': 'Healthcare Support',
+    '33': 'Protective Service',
+    '35': 'Food Preparation & Serving',
+    '37': 'Building & Grounds Cleaning',
+    '39': 'Personal Care & Service',
+    '41': 'Sales & Related',
+    '43': 'Office & Administrative Support',
+    '45': 'Farming, Fishing & Forestry',
+    '47': 'Construction & Extraction',
+    '49': 'Installation, Maintenance & Repair',
+    '51': 'Production',
+    '53': 'Transportation & Material Moving',
+}
+
+NAICS_SECTOR = {
+    '11': 'Agriculture, Forestry & Fishing',
+    '21': 'Mining, Quarrying & Oil/Gas',
+    '22': 'Utilities',
+    '23': 'Construction',
+    '31': 'Manufacturing', '32': 'Manufacturing', '33': 'Manufacturing',
+    '42': 'Wholesale Trade',
+    '44': 'Retail Trade', '45': 'Retail Trade',
+    '48': 'Transportation & Warehousing', '49': 'Transportation & Warehousing',
+    '51': 'Information',
+    '52': 'Finance & Insurance',
+    '53': 'Real Estate',
+    '54': 'Professional, Scientific & Technical',
+    '55': 'Management of Companies',
+    '56': 'Admin Support & Waste Management',
+    '61': 'Educational Services',
+    '62': 'Health Care & Social Assistance',
+    '71': 'Arts, Entertainment & Recreation',
+    '72': 'Accommodation & Food Services',
+    '81': 'Other Services',
+    '92': 'Public Administration',
+}
+
+# ── Data loading ────────────────────────────────────────────────────────────────
+@st.cache_data
+def load_data():
+    occ = pd.read_csv(
+        "Occupation_Table_All_Occupations_in_United_States_8e5b5573e5945249.csv"
+    )
+    ind = pd.read_csv(
+        "Industry_Table_All_Industries_in_United_States_0dd365ca70ddadd0.csv"
+    )
+
+    # Occupation enrichment
+    occ['Major Group Code'] = occ['SOC'].str[:2]
+    occ['Major Group'] = occ['Major Group Code'].map(SOC_MAJOR).fillna('Other')
+    occ['2025 Jobs (M)'] = occ['2025 Jobs'] / 1_000_000
+    occ['2030 Jobs (M)'] = occ['2030 Jobs'] / 1_000_000
+    occ['Pct Change'] = occ['2025 - 2030 % Change'] * 100
+    occ['Net Change'] = occ['2030 Jobs'] - occ['2025 Jobs']
+    occ['Median Annual Earnings'] = pd.to_numeric(occ['Median Annual Earnings'], errors='coerce')
+    occ['Turnover Rate'] = occ['2025 Separations'] / occ['2025 Jobs']
+
+    # Industry enrichment
+    ind['NAICS Str'] = ind['NAICS'].astype(str).str[:2]
+    ind['Sector'] = ind['NAICS Str'].map(NAICS_SECTOR).fillna('Other')
+    ind['2025 Jobs (M)'] = ind['2025 Jobs'] / 1_000_000
+    ind['Pct Change'] = ind['2025 - 2030 % Change'] * 100
+    ind['Avg Earnings (K)'] = ind['Avg. Earnings Per Job'] / 1000
+    ind['Turnover'] = pd.to_numeric(ind['2025 Turnover Rate'], errors='coerce')
+
+    return occ, ind
+
+occ_df, ind_df = load_data()
+
+# ── Plotly theme ────────────────────────────────────────────────────────────────
+TEAL  = "#1a7fc1"
+GREEN = "#12b76a"
+AMBER = "#f79009"
+CORAL = "#ef4444"
+SLATE = "#0d1f2d"
+MUTED = "#8ca0b3"
+
+CHART_LAYOUT = dict(
+    font_family="DM Sans",
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    margin=dict(l=10, r=10, t=30, b=10),
+    colorway=[TEAL, GREEN, AMBER, CORAL, "#7c3aed", "#0891b2", "#059669"],
+)
+
+def apply_theme(fig):
+    fig.update_layout(**CHART_LAYOUT)
+    fig.update_xaxes(
+        gridcolor="#eef2f7", linecolor="#e3eaf2",
+        tickfont=dict(size=11, color=MUTED), title_font=dict(size=11, color=MUTED),
+    )
+    fig.update_yaxes(
+        gridcolor="#eef2f7", linecolor="#e3eaf2",
+        tickfont=dict(size=11, color=MUTED), title_font=dict(size=11, color=MUTED),
+    )
+    return fig
+
+# ── Sidebar nav ─────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("<h1>LMI Reports</h1>", unsafe_allow_html=True)
+
+    st.markdown("**LABOR SUPPLY**")
+    supply_page = st.radio(
+        "", ["Occupation Overview", "Industry Overview"],
+        key="supply", label_visibility="collapsed"
+    )
+
+    st.markdown("**LABOR DEMAND**")
+    demand_page = st.radio(
+        "", ["Job Postings & Hires", "Growth Projections"],
+        key="demand", label_visibility="collapsed"
+    )
+
+    st.markdown("**COMPENSATION**")
+    comp_page = st.radio(
+        "", ["Wages by Occupation", "Wages by Industry"],
+        key="comp", label_visibility="collapsed"
+    )
+
+    st.markdown("**DEMOGRAPHICS**")
+    demo_page = st.radio(
+        "", ["Age & Gender", "Race & Ethnicity"],
+        key="demo", label_visibility="collapsed"
+    )
+
+    st.markdown("**SECTOR ANALYSIS**")
+    sector_page = st.radio(
+        "", ["Sector Bubble Chart"],
+        key="sector", label_visibility="collapsed"
+    )
+
+    # Determine active page
+    all_pages = {
+        "supply":  supply_page,
+        "demand":  demand_page,
+        "comp":    comp_page,
+        "demo":    demo_page,
+        "sector":  sector_page,
+    }
+
+    # Track last clicked group
+    if "active_group" not in st.session_state:
+        st.session_state.active_group = "supply"
+
+    # Detect which group was most recently interacted with via button press
+    col1, col2 = st.columns(2)
+
+# ── Determine active page from session ─────────────────────────────────────────
+# Use query param trick: whichever radio was touched last drives the view
+# We'll use a simpler approach: let users click a "Go" button per group
+# For simplicity, use the standard: last radio interaction wins via st.session_state
+
+# Figure out active page based on a dedicated selector
+st.sidebar.markdown("---")
+active_section = st.sidebar.selectbox(
+    "Active section",
+    ["Occupation Overview", "Industry Overview",
+     "Job Postings & Hires", "Growth Projections",
+     "Wages by Occupation", "Wages by Industry",
+     "Age & Gender", "Race & Ethnicity",
+     "Sector Bubble Chart"],
+    label_visibility="visible"
+)
+page = active_section
+
+# ── FILTERS (top bar, always visible) ──────────────────────────────────────────
+st.markdown('<div class="filter-bar">', unsafe_allow_html=True)
+fc1, fc2, fc3, fc4 = st.columns([2.5, 2.5, 2, 2])
+
+with fc1:
+    major_groups_all = ["All Major Groups"] + sorted(occ_df['Major Group'].unique())
+    sel_group = st.selectbox("SOC Major Group", major_groups_all, key="f_group")
+
+with fc2:
+    edu_levels = ["All Education Levels"] + sorted(
+        [e for e in occ_df['Typical Entry Level Education'].unique() if e != "N/A"]
+    )
+    sel_edu = st.selectbox("Entry-Level Education", edu_levels, key="f_edu")
+
+with fc3:
+    sectors_all = ["All Sectors"] + sorted(ind_df['Sector'].unique())
+    sel_sector = st.selectbox("Industry Sector", sectors_all, key="f_sector")
+
+with fc4:
+    min_jobs_k = st.slider("Min. jobs (thousands)", 0, 500, 0, step=25, key="f_jobs")
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Apply filters
+occ_f = occ_df.copy()
+if sel_group != "All Major Groups":
+    occ_f = occ_f[occ_f['Major Group'] == sel_group]
+if sel_edu != "All Education Levels":
+    occ_f = occ_f[occ_f['Typical Entry Level Education'] == sel_edu]
+if min_jobs_k > 0:
+    occ_f = occ_f[occ_f['2025 Jobs'] >= min_jobs_k * 1000]
+
+ind_f = ind_df.copy()
+if sel_sector != "All Sectors":
+    ind_f = ind_f[ind_f['Sector'] == sel_sector]
+
+# National totals (unfiltered for KPI cards)
+total_j25   = occ_df['2025 Jobs'].sum()
+total_j30   = occ_df['2030 Jobs'].sum()
+net_new     = total_j30 - total_j25
+nat_growth  = net_new / total_j25 * 100
+total_hires = occ_df['2025 Hires'].sum()
+
+# ── KPI cards ───────────────────────────────────────────────────────────────────
+st.markdown(f"""
+<div class="metric-row">
+  <div class="metric-card">
+    <div class="metric-label">Total employment (2025)</div>
+    <div class="metric-value">{total_j25/1e6:.1f}M</div>
+    <div class="metric-sub">All occupations, U.S. national</div>
+  </div>
+  <div class="metric-card green">
+    <div class="metric-label">Net new jobs by 2030</div>
+    <div class="metric-value">+{net_new/1e6:.1f}M</div>
+    <div class="metric-sub">{nat_growth:.1f}% projected growth</div>
+  </div>
+  <div class="metric-card amber">
+    <div class="metric-label">Annual hires (2025)</div>
+    <div class="metric-value">{total_hires/1e6:.1f}M</div>
+    <div class="metric-sub">Across all occupations</div>
+  </div>
+  <div class="metric-card teal">
+    <div class="metric-label">Filtered occupations</div>
+    <div class="metric-value">{len(occ_f):,}</div>
+    <div class="metric-sub">{occ_f['2025 Jobs'].sum()/1e6:.1f}M jobs in selection</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# PAGE: Occupation Overview
+# ════════════════════════════════════════════════════════════════════════════════
+if page == "Occupation Overview":
+    st.markdown('<p class="section-header">Occupation overview</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-sub">Employment by SOC major group — 2025 actual, 2030 projected</p>', unsafe_allow_html=True)
+
+    # Group by major group
+    grp = (
+        occ_f.groupby('Major Group')
+        .agg(Jobs25=('2025 Jobs', 'sum'), Jobs30=('2030 Jobs', 'sum'))
+        .reset_index()
+    )
+    grp['Pct'] = (grp['Jobs30'] - grp['Jobs25']) / grp['Jobs25'] * 100
+    grp = grp.sort_values('Jobs25', ascending=True)
+    grp['Color'] = grp['Pct'].apply(
+        lambda x: CORAL if x < 0 else (GREEN if x > 4.5 else TEAL)
+    )
+
+    col1, col2 = st.columns([3, 2])
+    with col1:
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            y=grp['Major Group'], x=grp['Jobs25'] / 1e6,
+            orientation='h', name='2025',
+            marker_color=grp['Color'].tolist(),
+            hovertemplate='%{y}<br>2025: %{x:.2f}M jobs<br>Growth: %{customdata:.1f}%<extra></extra>',
+            customdata=grp['Pct'],
+        ))
+        fig.update_layout(
+            **CHART_LAYOUT,
+            height=500, showlegend=False,
+            xaxis_title="Jobs (millions)",
+            yaxis=dict(tickfont=dict(size=10)),
+            margin=dict(l=10, r=20, t=30, b=30),
+        )
+        apply_theme(fig)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.markdown("**Growth by major group**")
+        grp_sorted = grp.sort_values('Pct', ascending=False)
+        fig2 = go.Figure(go.Bar(
+            x=grp_sorted['Pct'],
+            y=grp_sorted['Major Group'],
+            orientation='h',
+            marker_color=grp_sorted['Color'].tolist(),
+            hovertemplate='%{y}<br>%{x:.1f}% projected<extra></extra>',
+        ))
+        fig2.update_layout(
+            **CHART_LAYOUT, height=500,
+            showlegend=False, xaxis_title="% change 2025–2030",
+            yaxis=dict(tickfont=dict(size=10)),
+            margin=dict(l=10, r=20, t=30, b=30),
+        )
+        apply_theme(fig2)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    # Top occupations table
+    st.markdown("**Top 20 occupations by employment**")
+    top20 = (
+        occ_f[['Description', '2025 Jobs', '2030 Jobs', 'Pct Change',
+               'Median Annual Earnings', 'Typical Entry Level Education']]
+        .nlargest(20, '2025 Jobs')
+        .copy()
+    )
+    top20['2025 Jobs'] = top20['2025 Jobs'].apply(lambda x: f"{x/1e6:.3f}M")
+    top20['Pct Change'] = top20['Pct Change'].apply(lambda x: f"{x:+.1f}%")
+    top20['Median Annual Earnings'] = top20['Median Annual Earnings'].apply(
+        lambda x: f"${x:,.0f}" if pd.notna(x) else "—"
+    )
+    top20.columns = ['Occupation', '2025 Jobs', '2030 Jobs (raw)', 'Growth',
+                     'Median Wage', 'Edu Required']
+    top20 = top20.drop(columns=['2030 Jobs (raw)'])
+    st.dataframe(top20, use_container_width=True, hide_index=True)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# PAGE: Industry Overview
+# ════════════════════════════════════════════════════════════════════════════════
+elif page == "Industry Overview":
+    st.markdown('<p class="section-header">Industry overview</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-sub">Employment and earnings by NAICS sector</p>', unsafe_allow_html=True)
+
+    sec = (
+        ind_f.groupby('Sector')
+        .agg(Jobs25=('2025 Jobs', 'sum'), Jobs30=('2030 Jobs', 'sum'),
+             WtdEarn=('Avg. Earnings Per Job', 'mean'))
+        .reset_index()
+    )
+    sec['Growth'] = (sec['Jobs30'] - sec['Jobs25']) / sec['Jobs25'] * 100
+    sec = sec.sort_values('Jobs25', ascending=True)
+
+    col1, col2 = st.columns([3, 2])
+    with col1:
+        fig = go.Figure(go.Bar(
+            y=sec['Sector'], x=sec['Jobs25'] / 1e6,
+            orientation='h',
+            marker_color=TEAL,
+            hovertemplate='%{y}<br>%{x:.2f}M jobs<extra></extra>',
+        ))
+        fig.update_layout(**CHART_LAYOUT, height=480,
+                          xaxis_title="Jobs (millions)",
+                          yaxis=dict(tickfont=dict(size=10)),
+                          margin=dict(l=10, r=20, t=30, b=30))
+        apply_theme(fig)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        fig2 = go.Figure(go.Bar(
+            y=sec['Sector'],
+            x=sec['Growth'],
+            orientation='h',
+            marker_color=sec['Growth'].apply(
+                lambda x: GREEN if x > 4.5 else (CORAL if x < 0 else TEAL)
+            ).tolist(),
+            hovertemplate='%{y}<br>%{x:.1f}% growth<extra></extra>',
+        ))
+        fig2.update_layout(**CHART_LAYOUT, height=480,
+                           xaxis_title="% change 2025–2030",
+                           yaxis=dict(tickfont=dict(size=10)),
+                           margin=dict(l=10, r=20, t=30, b=30))
+        apply_theme(fig2)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    # Avg earnings bar
+    st.markdown("**Average earnings per job by sector**")
+    sec_earn = sec.sort_values('WtdEarn', ascending=True)
+    fig3 = go.Figure(go.Bar(
+        y=sec_earn['Sector'], x=sec_earn['WtdEarn'] / 1000,
+        orientation='h', marker_color="#7c3aed",
+        hovertemplate='%{y}<br>$%{x:.0f}K avg earnings<extra></extra>',
+    ))
+    fig3.update_layout(**CHART_LAYOUT, height=400,
+                       xaxis_title="Avg. earnings per job ($K)",
+                       yaxis=dict(tickfont=dict(size=10)),
+                       margin=dict(l=10, r=20, t=30, b=30))
+    apply_theme(fig3)
+    st.plotly_chart(fig3, use_container_width=True)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# PAGE: Job Postings & Hires
+# ════════════════════════════════════════════════════════════════════════════════
+elif page == "Job Postings & Hires":
+    st.markdown('<p class="section-header">Job postings & hires</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-sub">Annual hires vs. separations — demand signal by occupation group</p>', unsafe_allow_html=True)
+
+    grp = (
+        occ_f.groupby('Major Group')
+        .agg(Hires=('2025 Hires', 'sum'), Seps=('2025 Separations', 'sum'),
+             Jobs=('2025 Jobs', 'sum'))
+        .reset_index()
+    )
+    grp['Hire Rate'] = grp['Hires'] / grp['Jobs']
+    grp['Net'] = grp['Hires'] - grp['Seps']
+    grp = grp.sort_values('Hires', ascending=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            y=grp['Major Group'], x=grp['Hires'] / 1e6,
+            name='Hires', orientation='h', marker_color=GREEN,
+        ))
+        fig.add_trace(go.Bar(
+            y=grp['Major Group'], x=grp['Seps'] / 1e6,
+            name='Separations', orientation='h', marker_color=CORAL,
+            marker_opacity=0.65,
+        ))
+        fig.update_layout(**CHART_LAYOUT, barmode='overlay', height=480,
+                          xaxis_title="Workers (millions)",
+                          yaxis=dict(tickfont=dict(size=10)),
+                          legend=dict(orientation='h', y=1.04, x=0),
+                          margin=dict(l=10, r=20, t=40, b=30))
+        apply_theme(fig)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        fig2 = go.Figure(go.Bar(
+            y=grp.sort_values('Hire Rate', ascending=True)['Major Group'],
+            x=grp.sort_values('Hire Rate', ascending=True)['Hire Rate'],
+            orientation='h', marker_color=AMBER,
+            hovertemplate='%{y}<br>Hire rate: %{x:.2f}x<extra></extra>',
+        ))
+        fig2.update_layout(**CHART_LAYOUT, height=480,
+                           xaxis_title="Annual hire rate (hires ÷ total jobs)",
+                           yaxis=dict(tickfont=dict(size=10)),
+                           margin=dict(l=10, r=20, t=30, b=30))
+        apply_theme(fig2)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    st.markdown("**Net hires (hires − separations) by major group**")
+    grp_net = grp.sort_values('Net')
+    fig3 = go.Figure(go.Bar(
+        y=grp_net['Major Group'],
+        x=grp_net['Net'] / 1000,
+        orientation='h',
+        marker_color=grp_net['Net'].apply(lambda x: GREEN if x > 0 else CORAL).tolist(),
+        hovertemplate='%{y}<br>Net: %{x:,.0f}K<extra></extra>',
+    ))
+    fig3.update_layout(**CHART_LAYOUT, height=400,
+                       xaxis_title="Net hires (thousands)",
+                       yaxis=dict(tickfont=dict(size=10)),
+                       margin=dict(l=10, r=20, t=30, b=30))
+    apply_theme(fig3)
+    st.plotly_chart(fig3, use_container_width=True)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# PAGE: Growth Projections
+# ════════════════════════════════════════════════════════════════════════════════
+elif page == "Growth Projections":
+    st.markdown('<p class="section-header">Growth projections (2025–2030)</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-sub">Top growing and declining occupations — min. 50K jobs</p>', unsafe_allow_html=True)
+
+    large = occ_f[occ_f['2025 Jobs'] >= 50_000].copy()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        top10 = large.nlargest(10, 'Pct Change')[['Description', 'Pct Change', '2025 Jobs']].copy()
+        top10 = top10.sort_values('Pct Change')
+        fig = go.Figure(go.Bar(
+            y=top10['Description'].str[:40], x=top10['Pct Change'],
+            orientation='h', marker_color=GREEN,
+            hovertemplate='%{y}<br>%{x:.1f}% growth<extra></extra>',
+        ))
+        fig.update_layout(**CHART_LAYOUT, height=380,
+                          title_text="Top 10 fastest growing",
+                          title_font=dict(size=13, color=SLATE),
+                          xaxis_title="% change 2025–2030",
+                          yaxis=dict(tickfont=dict(size=10)),
+                          margin=dict(l=10, r=20, t=40, b=30))
+        apply_theme(fig)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        bot10 = large.nsmallest(10, 'Pct Change')[['Description', 'Pct Change', '2025 Jobs']].copy()
+        bot10 = bot10.sort_values('Pct Change')
+        fig2 = go.Figure(go.Bar(
+            y=bot10['Description'].str[:40], x=bot10['Pct Change'],
+            orientation='h', marker_color=CORAL,
+            hovertemplate='%{y}<br>%{x:.1f}% change<extra></extra>',
+        ))
+        fig2.update_layout(**CHART_LAYOUT, height=380,
+                           title_text="Top 10 slowest growing / declining",
+                           title_font=dict(size=13, color=SLATE),
+                           xaxis_title="% change 2025–2030",
+                           yaxis=dict(tickfont=dict(size=10)),
+                           margin=dict(l=10, r=20, t=40, b=30))
+        apply_theme(fig2)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    # Scatter: jobs vs growth
+    st.markdown("**Employment size vs. projected growth (filtered occupations)**")
+    scatter_df = large.copy()
+    scatter_df['Size'] = scatter_df['2025 Jobs'] / 1e6
+    fig3 = px.scatter(
+        scatter_df, x='Pct Change', y='Median Annual Earnings',
+        size='Size', color='Major Group',
+        hover_name='Description',
+        hover_data={'Pct Change': ':.1f', 'Median Annual Earnings': ':,.0f', 'Size': ':.2f'},
+        labels={'Pct Change': '% growth 2025–2030',
+                'Median Annual Earnings': 'Median annual wage ($)',
+                'Size': 'Jobs (M)'},
+        height=420,
+    )
+    fig3.update_layout(**CHART_LAYOUT, margin=dict(l=10, r=10, t=30, b=30))
+    apply_theme(fig3)
+    st.plotly_chart(fig3, use_container_width=True)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# PAGE: Wages by Occupation
+# ════════════════════════════════════════════════════════════════════════════════
+elif page == "Wages by Occupation":
+    st.markdown('<p class="section-header">Wages by occupation</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-sub">Median and average annual earnings across occupational groups</p>', unsafe_allow_html=True)
+
+    grp_wage = (
+        occ_f.groupby('Major Group')
+        .agg(MedWage=('Median Annual Earnings', 'median'),
+             AvgWage=('Avg. Hourly Earnings', lambda x: x.astype(float).mean() * 2080))
+        .reset_index()
+        .sort_values('MedWage')
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            y=grp_wage['Major Group'], x=grp_wage['AvgWage'] / 1000,
+            name='Avg annual', orientation='h',
+            marker_color=TEAL, opacity=0.6,
+        ))
+        fig.add_trace(go.Bar(
+            y=grp_wage['Major Group'], x=grp_wage['MedWage'] / 1000,
+            name='Median annual', orientation='h',
+            marker_color=SLATE, opacity=0.85,
+        ))
+        fig.update_layout(**CHART_LAYOUT, barmode='overlay', height=480,
+                          xaxis_title="Annual earnings ($K)",
+                          yaxis=dict(tickfont=dict(size=10)),
+                          legend=dict(orientation='h', y=1.04, x=0),
+                          margin=dict(l=10, r=20, t=40, b=30))
+        apply_theme(fig)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        top15_wage = (
+            occ_f[occ_f['2025 Jobs'] >= 50_000]
+            .nlargest(15, 'Median Annual Earnings')
+            [['Description', 'Median Annual Earnings', 'Pct Change', '2025 Jobs']]
+            .sort_values('Median Annual Earnings')
+        )
+        fig2 = go.Figure(go.Bar(
+            y=top15_wage['Description'].str[:38],
+            x=top15_wage['Median Annual Earnings'] / 1000,
+            orientation='h',
+            marker_color="#7c3aed",
+            hovertemplate='%{y}<br>$%{x:.0f}K median<extra></extra>',
+        ))
+        fig2.update_layout(**CHART_LAYOUT, height=480,
+                           title_text="Top 15 highest-wage occupations (50K+ jobs)",
+                           title_font=dict(size=12, color=SLATE),
+                           xaxis_title="Median annual earnings ($K)",
+                           yaxis=dict(tickfont=dict(size=10)),
+                           margin=dict(l=10, r=20, t=40, b=30))
+        apply_theme(fig2)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    # Education vs wage box
+    st.markdown("**Median wage by entry-level education requirement**")
+    edu_wage = (
+        occ_f.groupby('Typical Entry Level Education')['Median Annual Earnings']
+        .median().reset_index()
+        .sort_values('Median Annual Earnings')
+    )
+    edu_wage = edu_wage[edu_wage['Typical Entry Level Education'] != 'N/A']
+    fig3 = go.Figure(go.Bar(
+        y=edu_wage['Typical Entry Level Education'],
+        x=edu_wage['Median Annual Earnings'] / 1000,
+        orientation='h', marker_color=AMBER,
+        hovertemplate='%{y}<br>$%{x:.0f}K median<extra></extra>',
+    ))
+    fig3.update_layout(**CHART_LAYOUT, height=320,
+                       xaxis_title="Median annual earnings ($K)",
+                       yaxis=dict(tickfont=dict(size=11)),
+                       margin=dict(l=10, r=20, t=30, b=30))
+    apply_theme(fig3)
+    st.plotly_chart(fig3, use_container_width=True)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# PAGE: Wages by Industry
+# ════════════════════════════════════════════════════════════════════════════════
+elif page == "Wages by Industry":
+    st.markdown('<p class="section-header">Wages by industry</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-sub">Average earnings per job aggregated by NAICS sector</p>', unsafe_allow_html=True)
+
+    sec_wage = (
+        ind_f.groupby('Sector')
+        .agg(AvgEarn=('Avg. Earnings Per Job', 'mean'),
+             Jobs=('2025 Jobs', 'sum'),
+             Turnover=('2025 Turnover Rate', 'mean'))
+        .reset_index()
+        .sort_values('AvgEarn')
+    )
+
+    col1, col2 = st.columns([3, 2])
+    with col1:
+        fig = go.Figure(go.Bar(
+            y=sec_wage['Sector'], x=sec_wage['AvgEarn'] / 1000,
+            orientation='h',
+            marker_color=sec_wage['AvgEarn'].apply(
+                lambda x: "#7c3aed" if x > 150000 else (TEAL if x > 80000 else AMBER)
+            ).tolist(),
+            hovertemplate='%{y}<br>Avg: $%{x:.0f}K<extra></extra>',
+        ))
+        fig.update_layout(**CHART_LAYOUT, height=480,
+                          xaxis_title="Avg. earnings per job ($K)",
+                          yaxis=dict(tickfont=dict(size=10)),
+                          margin=dict(l=10, r=20, t=30, b=30))
+        apply_theme(fig)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        fig2 = px.scatter(
+            sec_wage, x='AvgEarn', y='Turnover',
+            size='Jobs', color='AvgEarn',
+            hover_name='Sector',
+            color_continuous_scale=['#1a7fc1', '#7c3aed'],
+            labels={'AvgEarn': 'Avg earnings ($)', 'Turnover': 'Turnover rate', 'Jobs': 'Jobs'},
+            height=480,
+        )
+        fig2.update_layout(**CHART_LAYOUT,
+                           xaxis_title="Avg earnings ($)", yaxis_title="Turnover rate",
+                           coloraxis_showscale=False,
+                           margin=dict(l=10, r=20, t=30, b=30))
+        apply_theme(fig2)
+        st.plotly_chart(fig2, use_container_width=True)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# PAGE: Age & Gender
+# ════════════════════════════════════════════════════════════════════════════════
+elif page == "Age & Gender":
+    st.markdown('<p class="section-header">Age & gender demographics</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-sub">Workforce composition by major occupation group</p>', unsafe_allow_html=True)
+
+    age_cols = ['Current Year Age 14-18', 'Current Year Age 19-21',
+                'Current Year Age 22-24', 'Current Year Age 25-34',
+                'Current Year Age 35-44', 'Current Year Age 45-54',
+                'Current Year Age 55-64', 'Current Year Age 65+']
+    age_labels = ['14–18', '19–21', '22–24', '25–34', '35–44', '45–54', '55–64', '65+']
+
+    total_age = occ_f[age_cols].sum()
+    total_pop  = total_age.sum()
+
+    fig = go.Figure(go.Bar(
+        x=age_labels,
+        y=total_age.values / 1e6,
+        marker_color=TEAL,
+        hovertemplate='%{x}<br>%{y:.2f}M workers<extra></extra>',
+    ))
+    fig.update_layout(**CHART_LAYOUT, height=300,
+                      yaxis_title="Workers (millions)",
+                      margin=dict(l=10, r=20, t=30, b=30))
+    apply_theme(fig)
+
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown("**Age distribution (filtered occupations)**")
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.markdown("**Gender split**")
+        males   = occ_f['Current Year Males'].sum()
+        females = occ_f['Current Year Females'].sum()
+        fig_g = go.Figure(go.Pie(
+            labels=['Male', 'Female'],
+            values=[males, females],
+            hole=0.55,
+            marker_colors=[TEAL, AMBER],
+            textfont=dict(size=12),
+        ))
+        fig_g.update_layout(**CHART_LAYOUT, height=300,
+                            showlegend=True,
+                            legend=dict(orientation='h', y=-0.1),
+                            margin=dict(l=10, r=10, t=30, b=30))
+        st.plotly_chart(fig_g, use_container_width=True)
+
+    # Age by major group heatmap
+    st.markdown("**Age composition by major group (%)**")
+    age_grp = occ_f.groupby('Major Group')[age_cols].sum()
+    age_grp_pct = age_grp.div(age_grp.sum(axis=1), axis=0) * 100
+    age_grp_pct.columns = age_labels
+
+    fig_heat = px.imshow(
+        age_grp_pct.round(1),
+        color_continuous_scale=["#e8f4fd", TEAL, SLATE],
+        aspect='auto',
+        text_auto='.1f',
+        labels=dict(x="Age group", y="Major group", color="% share"),
+    )
+    fig_heat.update_layout(**CHART_LAYOUT, height=480,
+                           coloraxis_showscale=False,
+                           margin=dict(l=10, r=10, t=30, b=30))
+    fig_heat.update_xaxes(side='top')
+    st.plotly_chart(fig_heat, use_container_width=True)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# PAGE: Race & Ethnicity
+# ════════════════════════════════════════════════════════════════════════════════
+elif page == "Race & Ethnicity":
+    st.markdown('<p class="section-header">Race & ethnicity</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-sub">Workforce diversity composition across major groups</p>', unsafe_allow_html=True)
+
+    race_cols = {
+        'White': 'Current Year White',
+        'Hispanic/Latino': 'Current Year Hispanic or Latino',
+        'Black/African American': 'Current Year Black or African American',
+        'Asian': 'Current Year Asian',
+        'Two or More Races': 'Current Year Two or More Races',
+        'Am. Indian/Alaska Native': 'Current Year American Indian or Alaska Native',
+        'Native Hawaiian/Pacific Islander': 'Current Year Native Hawaiian or Other Pacific Islander',
+    }
+
+    race_totals = {label: occ_f[col].sum() for label, col in race_cols.items()}
+    total_r = sum(race_totals.values())
+
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.markdown("**National composition (filtered)**")
+        fig = go.Figure(go.Pie(
+            labels=list(race_totals.keys()),
+            values=list(race_totals.values()),
+            hole=0.5,
+            textfont=dict(size=11),
+            marker_colors=[TEAL, AMBER, CORAL, "#7c3aed", GREEN, "#0891b2", "#f97316"],
+        ))
+        fig.update_layout(**CHART_LAYOUT, height=360,
+                          showlegend=True,
+                          legend=dict(font=dict(size=10)),
+                          margin=dict(l=10, r=10, t=30, b=10))
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.markdown("**Diversity share by major group (%)**")
+        div_grp = (
+            occ_f.groupby('Major Group')
+            .agg(Diverse=('Current Year Total Diversity', 'sum'),
+                 Total=('2025 Jobs', 'sum'))
+            .reset_index()
+        )
+        div_grp['Div Pct'] = div_grp['Diverse'] / div_grp['Total'] * 100
+        div_grp = div_grp.sort_values('Div Pct')
+        fig2 = go.Figure(go.Bar(
+            y=div_grp['Major Group'], x=div_grp['Div Pct'],
+            orientation='h',
+            marker_color=div_grp['Div Pct'].apply(
+                lambda x: CORAL if x > 50 else (AMBER if x > 40 else TEAL)
+            ).tolist(),
+            hovertemplate='%{y}<br>Diversity: %{x:.1f}%<extra></extra>',
+        ))
+        fig2.update_layout(**CHART_LAYOUT, height=380,
+                           xaxis_title="% racially/ethnically diverse",
+                           yaxis=dict(tickfont=dict(size=10)),
+                           margin=dict(l=10, r=20, t=30, b=30))
+        apply_theme(fig2)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    # Stacked race by group
+    st.markdown("**Race/ethnicity breakdown by major group**")
+    race_grp = occ_f.groupby('Major Group')[[c for c in race_cols.values()]].sum()
+    race_grp.columns = list(race_cols.keys())
+    race_grp_pct = race_grp.div(race_grp.sum(axis=1), axis=0) * 100
+    race_grp_pct = race_grp_pct.sort_values('White')
+
+    colors = [TEAL, AMBER, CORAL, "#7c3aed", GREEN, "#0891b2", "#f97316"]
+    fig3 = go.Figure()
+    for i, (race, color) in enumerate(zip(race_grp_pct.columns, colors)):
+        fig3.add_trace(go.Bar(
+            y=race_grp_pct.index, x=race_grp_pct[race],
+            name=race, orientation='h', marker_color=color,
+            hovertemplate='%{y}<br>' + race + ': %{x:.1f}%<extra></extra>',
+        ))
+    fig3.update_layout(**CHART_LAYOUT, barmode='stack', height=500,
+                       xaxis_title="% share",
+                       yaxis=dict(tickfont=dict(size=10)),
+                       legend=dict(orientation='h', y=1.05, font=dict(size=10)),
+                       margin=dict(l=10, r=20, t=50, b=30))
+    apply_theme(fig3)
+    st.plotly_chart(fig3, use_container_width=True)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# PAGE: Sector Bubble Chart
+# ════════════════════════════════════════════════════════════════════════════════
+elif page == "Sector Bubble Chart":
+    st.markdown('<p class="section-header">Industry sector — growth vs. earnings</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-sub">Bubble size = 2025 employment. X = projected 5-year growth. Y = avg. earnings per job.</p>', unsafe_allow_html=True)
+
+    sec = (
+        ind_f.groupby('Sector')
+        .agg(Jobs25=('2025 Jobs', 'sum'),
+             Jobs30=('2030 Jobs', 'sum'),
+             AvgEarn=('Avg. Earnings Per Job', 'mean'),
+             Turnover=('2025 Turnover Rate', 'mean'))
+        .reset_index()
+    )
+    sec['Growth'] = (sec['Jobs30'] - sec['Jobs25']) / sec['Jobs25'] * 100
+    sec['EarnK'] = sec['AvgEarn'] / 1000
+    sec['JobsM'] = sec['Jobs25'] / 1e6
+    sec['Color'] = sec['Growth'].apply(
+        lambda x: GREEN if x > 4.5 else (CORAL if x < 1.5 else TEAL)
+    )
+
+    fig = go.Figure()
+    for _, row in sec.iterrows():
+        fig.add_trace(go.Scatter(
+            x=[row['Growth']],
+            y=[row['EarnK']],
+            mode='markers+text',
+            marker=dict(
+                size=max(row['JobsM'] * 4.5, 8),
+                color=row['Color'],
+                opacity=0.72,
+                line=dict(width=1, color='white'),
+            ),
+            text=[row['Sector'][:22]],
+            textposition='top center',
+            textfont=dict(size=9, color=SLATE),
+            name=row['Sector'],
+            hovertemplate=(
+                f"<b>{row['Sector']}</b><br>"
+                f"Growth: {row['Growth']:.1f}%<br>"
+                f"Avg earnings: ${row['EarnK']:.0f}K<br>"
+                f"Employment: {row['JobsM']:.1f}M<br>"
+                f"Turnover: {row['Turnover']:.2f}x<extra></extra>"
+            ),
+        ))
+
+    # Reference line at national avg growth
+    nat_avg = sec['Growth'].mean()
+    fig.add_vline(
+        x=nat_avg, line_dash="dot", line_color=MUTED, line_width=1,
+        annotation_text=f"Avg {nat_avg:.1f}%",
+        annotation_font_size=10, annotation_font_color=MUTED,
+        annotation_position="top right",
+    )
+
+    fig.update_layout(
+        **CHART_LAYOUT,
+        height=560,
+        showlegend=False,
+        xaxis=dict(title="5-year projected growth (%)", range=[-0.5, 11],
+                   tickfont=dict(size=11), gridcolor="#eef2f7"),
+        yaxis=dict(title="Avg. earnings per job ($K)", range=[20, 240],
+                   tickfont=dict(size=11), gridcolor="#eef2f7"),
+        margin=dict(l=30, r=30, t=40, b=40),
+    )
+    apply_theme(fig)
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Legend strip
+    l1, l2, l3 = st.columns(3)
+    with l1:
+        st.markdown(
+            f'<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:{GREEN};margin-right:6px;"></span>'
+            f'<span style="font-size:0.78rem;color:#6b7f91;">Above-avg growth (&gt;4.5%)</span>',
+            unsafe_allow_html=True,
+        )
+    with l2:
+        st.markdown(
+            f'<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:{TEAL};margin-right:6px;"></span>'
+            f'<span style="font-size:0.78rem;color:#6b7f91;">Moderate growth (1.5–4.5%)</span>',
+            unsafe_allow_html=True,
+        )
+    with l3:
+        st.markdown(
+            f'<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:{CORAL};margin-right:6px;"></span>'
+            f'<span style="font-size:0.78rem;color:#6b7f91;">Slow growth (&lt;1.5%)</span>',
+            unsafe_allow_html=True,
+        )
+
+    # Data table below
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("**Sector detail**")
+    tbl = sec[['Sector', 'JobsM', 'Growth', 'EarnK', 'Turnover']].copy()
+    tbl.columns = ['Sector', 'Jobs (M)', 'Growth (%)', 'Avg Earnings ($K)', 'Turnover Rate']
+    tbl['Jobs (M)']         = tbl['Jobs (M)'].round(2)
+    tbl['Growth (%)']       = tbl['Growth (%)'].round(1)
+    tbl['Avg Earnings ($K)']= tbl['Avg Earnings ($K)'].round(1)
+    tbl['Turnover Rate']    = tbl['Turnover Rate'].round(2)
+    st.dataframe(tbl.sort_values('Jobs (M)', ascending=False), use_container_width=True, hide_index=True)
+
+# ── Footer ──────────────────────────────────────────────────────────────────────
+st.markdown(
+    '<p class="datasource">Source: Lightcast Q2 2026 · 798 SOC occupations · 947 NAICS industries · U.S. national</p>',
+    unsafe_allow_html=True,
+)
