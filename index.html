@@ -448,13 +448,41 @@ function mk(id,type,data,options){
   return charts[id];
 }
 function hbar(id,labels,data,colors,xLabel=''){
-  return mk(id,'bar',
-    {labels,datasets:[{data,backgroundColor:colors,borderWidth:0,borderRadius:3}]},
-    {...JSON.parse(JSON.stringify(BASE_OPTS)),indexAxis:'h',
-     plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.formattedValue}}},
-     scales:{x:{...BASE_OPTS.scales.x,title:{display:!!xLabel,text:xLabel,color:C.muted,font:{size:10}}},
-             y:{...BASE_OPTS.scales.y,grid:{display:false},ticks:{color:C.muted,font:{size:10}}}}}
+  const ch = mk(id,'bar',
+    {labels, datasets:[{
+      data, backgroundColor:colors,
+      borderWidth:0, borderRadius:3,
+      minBarLength:4,
+    }]},
+    {
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:400},
+      indexAxis:'h',
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.formattedValue}`}},
+      },
+      scales:{
+        x:{
+          grid:{color:'#eef2f7'},
+          border:{display:false},
+          ticks:{color:C.muted, font:{size:11}},
+          title:{display:!!xLabel, text:xLabel, color:C.muted, font:{size:10}},
+        },
+        y:{
+          grid:{display:false},
+          border:{display:false},
+          ticks:{
+            color:C.muted, font:{size:10.5},
+            autoSkip:false, maxRotation:0,
+          },
+        },
+      },
+      layout:{padding:{right:8}},
+    }
   );
+  if(ch) setTimeout(()=>ch.resize(), 50);
+  return ch;
 }
 
 // ── KPI cards ─────────────────────────────────────────────────
@@ -536,15 +564,22 @@ function renderPostings(){
   charts['c-hire-bar'] = mk('c-hire-bar','bar',{
     labels,
     datasets:[
-      {label:'Hires',    data:grps.map(g=>+(g.hires/1e6).toFixed(2)), backgroundColor:C.green,    borderWidth:0, borderRadius:2},
-      {label:'Separations',data:grps.map(g=>+(g.seps/1e6).toFixed(2)), backgroundColor:C.coral+'99',borderWidth:0, borderRadius:2},
+      {label:'Hires',      data:grps.map(g=>+(g.hires/1e6).toFixed(2)), backgroundColor:C.green,      borderWidth:0, borderRadius:2, minBarLength:4},
+      {label:'Separations',data:grps.map(g=>+(g.seps/1e6).toFixed(2)),  backgroundColor:C.coral+'99', borderWidth:0, borderRadius:2, minBarLength:4},
     ]
   },{
-    ...JSON.parse(JSON.stringify(BASE_OPTS)), indexAxis:'h',
+    responsive:true, maintainAspectRatio:false, animation:{duration:400},
+    indexAxis:'h',
     plugins:{legend:{display:true,position:'top',labels:{usePointStyle:true,pointStyle:'rect',font:{size:11}}}},
-    scales:{x:{...BASE_OPTS.scales.x,title:{display:true,text:'Workers (millions)',color:C.muted,font:{size:10}}},
-            y:{...BASE_OPTS.scales.y,grid:{display:false},ticks:{color:C.muted,font:{size:10}}}},
+    scales:{
+      x:{grid:{color:'#eef2f7'},border:{display:false},ticks:{color:C.muted,font:{size:11}},
+         title:{display:true,text:'Workers (millions)',color:C.muted,font:{size:10}}},
+      y:{grid:{display:false},border:{display:false},
+         ticks:{color:C.muted,font:{size:10.5},autoSkip:false,maxRotation:0}},
+    },
+    layout:{padding:{right:8}},
   });
+  setTimeout(()=>charts['c-hire-bar']&&charts['c-hire-bar'].resize(),50);
 
   const rateSort = [...grps].sort((a,b)=>(a.hires/a.j25)-(b.hires/b.j25));
   hbar('c-hire-rate', rateSort.map(g=>g.group),
@@ -596,6 +631,7 @@ function renderGrowth(){
     },
     layout:{padding:{top:10,bottom:10,left:10,right:10}}
   });
+  setTimeout(()=>charts['c-scatter']&&charts['c-scatter'].resize(),50);
 }
 
 function renderWagesOcc(){
@@ -757,8 +793,11 @@ function renderRace(){
     indexAxis:'y',
     plugins:{legend:{display:true,position:'top',labels:{usePointStyle:true,pointStyle:'rect',font:{size:11}}}},
     scales:{
-      x:{...BASE_OPTS.scales.x,stacked:true,max:100,title:{display:true,text:'% share',color:C.muted,font:{size:10}}},
-      y:{...BASE_OPTS.scales.y,stacked:true,grid:{display:false},ticks:{color:C.muted,font:{size:10}}},
+      x:{grid:{color:'#eef2f7'},border:{display:false},stacked:true,max:100,
+         ticks:{color:C.muted,font:{size:11}},
+         title:{display:true,text:'% share',color:C.muted,font:{size:10}}},
+      y:{grid:{display:false},border:{display:false},stacked:true,
+         ticks:{color:C.muted,font:{size:10.5},autoSkip:false,maxRotation:0}},
     }
   });
 }
@@ -863,7 +902,8 @@ function showPage(id){
   const pg = document.getElementById('pg-'+id);
   if(pg) pg.classList.add('active');
   document.querySelectorAll('.sb-item').forEach(b=>{ if(b.dataset.page===id)b.classList.add('active'); });
-  renderActive();
+  // Defer one frame so browser computes grid/flex layout before Chart.js reads offsetWidth
+  requestAnimationFrame(()=>requestAnimationFrame(()=>renderActive()));
 }
 
 function renderActive(){
@@ -878,7 +918,7 @@ document.querySelectorAll('.sb-item').forEach(btn=>{
 });
 
 // ── Boot ──────────────────────────────────────────────────────
-showPage('occ-overview');
+requestAnimationFrame(()=>requestAnimationFrame(()=>showPage('occ-overview')));
 </script>
 </body>
 </html>
