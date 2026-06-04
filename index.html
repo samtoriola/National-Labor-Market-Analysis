@@ -4,6 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>U.S. Labor Market Intelligence Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--navy:#0d1f2d;--navy2:#1a2f42;--navy3:#243a50;--teal:#1a7fc1;--green:#12b76a;
@@ -85,6 +86,26 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
   max-width:330px;box-shadow:0 6px 20px rgba(0,0,0,.3);
   display:none;border:1px solid rgba(255,255,255,.1);
 }
+
+/* ── Export button ── */
+.card{ position:relative; }
+.export-btn{
+  position:absolute;top:12px;right:12px;
+  width:28px;height:28px;border-radius:6px;
+  background:var(--white);border:1px solid var(--border);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .15s,background .12s,box-shadow .12s;
+  z-index:10;color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+.card:hover .export-btn{ opacity:1; }
+.export-btn:hover{
+  background:var(--teal);border-color:var(--teal);
+  color:#fff;box-shadow:0 2px 8px rgba(26,127,193,.35);
+}
+.export-btn svg{ pointer-events:none; }
+/* downloading state */
+.export-btn.busy{ opacity:1;pointer-events:none;background:#f4f7fb; }
+
 </style>
 </head>
 <body>
@@ -138,7 +159,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 </div>
   <div class="ph"><h2>Occupation overview</h2><p>Employment by SOC major group — 2025 actual, 2030 projected</p></div>
   <div class="g2">
-    <div class="card"><h3>Employment by major group (2025)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Above-avg growth (&gt;4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Moderate growth (1.5–4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Declining / slow (&lt;1.5%)</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Employment by major group (2025)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Above-avg growth (&gt;4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Moderate growth (1.5–4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Declining / slow (&lt;1.5%)</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="670" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="690" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">0</text>
 <line x1="348" y1="10" x2="348" y2="670" stroke="#eef2f7" stroke-width="1"/>
@@ -239,7 +260,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <text x="259.39209600000004" y="659" font-size="10.5" fill="#5a7a94" font-family="Inter,sans-serif">1.1M</text>
 <rect x="10" y="640" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Farming &amp; Forestry had 1.1M jobs in 2025 — moderate growth of +2.6% projected by 2030. Median wage: $34,242.')" style="cursor:default"/>
 </svg></div>
-    <div class="card"><h3>5-year projected growth (%)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Above-avg growth (&gt;4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Moderate growth (1.5–4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Declining / slow (&lt;1.5%)</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>5-year projected growth (%)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Above-avg growth (&gt;4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Moderate growth (1.5–4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Declining / slow (&lt;1.5%)</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="670" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="690" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">+0.0%</text>
 <line x1="348" y1="10" x2="348" y2="670" stroke="#eef2f7" stroke-width="1"/>
@@ -341,7 +362,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <rect x="10" y="640" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Office &amp; Admin Support is projected to grow +1.2% by 2030 — moderate growth, below the national average of +4.5%. Current employment: 19.0M jobs.')" style="cursor:default"/>
 </svg></div>
   </div>
-  <div class="card">
+  <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
     <h3>Top 20 occupations by employment <span style="font-weight:400;text-transform:none;color:#aab8c6;font-size:10px">— updates with filters</span></h3>
     <div class="tbl-wrap"><table id="tbl-occ"><thead><tr><th>Occupation</th><th>2025 Jobs</th><th>Growth</th><th>Median Wage</th><th>Education</th></tr></thead>
     <tbody><tr><td>Home Health and Personal Care Aides</td><td>4.7M</td><td><span class="badge up">+14.0%</span></td><td>$34,902</td><td>High school diploma or equivalent</td></tr><tr><td>Fast Food and Counter Workers</td><td>3.8M</td><td><span class="badge up">+5.9%</span></td><td>$30,472</td><td>No formal educational credential</td></tr><tr><td>Retail Salespersons</td><td>3.8M</td><td><span class="badge nt">+1.4%</span></td><td>$34,570</td><td>No formal educational credential</td></tr><tr><td>General and Operations Managers</td><td>3.7M</td><td><span class="badge up">+5.2%</span></td><td>$102,960</td><td>Bachelor&#x27;s degree</td></tr><tr><td>Registered Nurses</td><td>3.4M</td><td><span class="badge up">+5.8%</span></td><td>$93,600</td><td>Bachelor&#x27;s degree</td></tr><tr><td>Cashiers</td><td>3.1M</td><td><span class="badge dn">-2.2%</span></td><td>$31,179</td><td>No formal educational credential</td></tr><tr><td>Laborers and Freight, Stock, and Material Movers, Hand</td><td>3.0M</td><td><span class="badge nt">+3.8%</span></td><td>$38,938</td><td>No formal educational credential</td></tr><tr><td>Stockers and Order Fillers</td><td>2.8M</td><td><span class="badge up">+6.5%</span></td><td>$37,086</td><td>High school diploma or equivalent</td></tr><tr><td>Customer Service Representatives</td><td>2.8M</td><td><span class="badge nt">+0.6%</span></td><td>$42,827</td><td>High school diploma or equivalent</td></tr><tr><td>Office Clerks, General</td><td>2.7M</td><td><span class="badge nt">+0.1%</span></td><td>$43,618</td><td>High school diploma or equivalent</td></tr><tr><td>Janitors and Cleaners, Except Maids and Housekeeping Cleaners</td><td>2.4M</td><td><span class="badge nt">+3.6%</span></td><td>$35,922</td><td>No formal educational credential</td></tr><tr><td>Waiters and Waitresses</td><td>2.3M</td><td><span class="badge nt">+2.4%</span></td><td>$33,758</td><td>No formal educational credential</td></tr><tr><td>Heavy and Tractor-Trailer Truck Drivers</td><td>2.1M</td><td><span class="badge nt">+4.4%</span></td><td>$57,450</td><td>Postsecondary nondegree award</td></tr><tr><td>Secretaries and Administrative Assistants, Except Legal, Medical, and Executive</td><td>2.0M</td><td><span class="badge nt">+2.4%</span></td><td>$46,301</td><td>High school diploma or equivalent</td></tr><tr><td>Postsecondary Teachers</td><td>1.8M</td><td><span class="badge up">+5.3%</span></td><td>$84,016</td><td>Doctoral or professional degree</td></tr><tr><td>Software Developers</td><td>1.7M</td><td><span class="badge up">+10.7%</span></td><td>$133,078</td><td>Bachelor&#x27;s degree</td></tr><tr><td>Maintenance and Repair Workers, General</td><td>1.7M</td><td><span class="badge up">+4.7%</span></td><td>$48,630</td><td>High school diploma or equivalent</td></tr><tr><td>First-Line Supervisors of Office and Administrative Support Workers</td><td>1.6M</td><td><span class="badge nt">+3.1%</span></td><td>$66,144</td><td>High school diploma or equivalent</td></tr><tr><td>Bookkeeping, Accounting, and Auditing Clerks</td><td>1.5M</td><td><span class="badge nt">+0.3%</span></td><td>$49,213</td><td>Some college, no degree</td></tr><tr><td>Accountants and Auditors</td><td>1.5M</td><td><span class="badge up">+5.2%</span></td><td>$81,682</td><td>Bachelor&#x27;s degree</td></tr></tbody></table></div>
@@ -357,7 +378,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 </div>
   <div class="ph"><h2>Industry overview</h2><p>Employment and earnings by NAICS sector</p></div>
   <div class="g2">
-    <div class="card"><h3>Employment by sector (2025)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Employment</div></div><svg viewBox="0 0 778 636" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:636px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Employment by sector (2025)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Employment</div></div><svg viewBox="0 0 778 636" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:636px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="610" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="630" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">0</text>
 <line x1="348" y1="10" x2="348" y2="610" stroke="#eef2f7" stroke-width="1"/>
@@ -450,7 +471,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <text x="243.286656" y="599" font-size="10.5" fill="#5a7a94" font-family="Inter,sans-serif">0.6M</text>
 <rect x="10" y="580" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Mining &amp; Oil/Gas employs 0.6M workers in 2025 — moderate growth of +1.4% projected by 2030. Avg. earnings: $159,265 per job.')" style="cursor:default"/>
 </svg></div>
-    <div class="card"><h3>5-year projected growth (%)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Above-avg growth (&gt;4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Moderate growth (1.5–4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Declining / slow (&lt;1.5%)</div></div><svg viewBox="0 0 778 636" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:636px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>5-year projected growth (%)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Above-avg growth (&gt;4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Moderate growth (1.5–4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Declining / slow (&lt;1.5%)</div></div><svg viewBox="0 0 778 636" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:636px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="610" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="630" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">+0.0%</text>
 <line x1="348" y1="10" x2="348" y2="610" stroke="#eef2f7" stroke-width="1"/>
@@ -544,7 +565,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <rect x="10" y="580" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Retail Trade projected growth: +1.1% by 2030 — moderate growth, below the 4.5% national average. Employment: 15.4M workers.')" style="cursor:default"/>
 </svg></div>
   </div>
-  <div class="card"><h3>Avg. earnings per job by sector</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#7c3aed"></div>High earnings (&gt;$150K)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Mid earnings ($80–150K)</div><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Lower earnings (&lt;$80K)</div></div><svg viewBox="0 0 778 636" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:636px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+  <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Avg. earnings per job by sector</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#7c3aed"></div>High earnings (&gt;$150K)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Mid earnings ($80–150K)</div><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Lower earnings (&lt;$80K)</div></div><svg viewBox="0 0 778 636" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:636px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="610" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="630" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">0</text>
 <line x1="348" y1="10" x2="348" y2="610" stroke="#eef2f7" stroke-width="1"/>
@@ -642,7 +663,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <div class="pg" id="pg-post">
   <div class="ph"><h2>Job postings &amp; hires</h2><p>Annual hires vs. separations by major group</p></div>
   <div class="g2">
-    <div class="card"><h3>Hires vs. separations (2025)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Hires</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Separations</div></div><svg viewBox="0 0 758 848" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:848px;display:block" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Hires vs. separations (2025)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Hires</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Separations</div></div><svg viewBox="0 0 758 848" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:848px;display:block" class="svgbar" onmouseleave="hideTip()">
 <rect x="228" y="8" width="10" height="10" rx="2" fill="#12b76a"/>
 <text x="242" y="17" font-size="11" fill="#8ca0b3" font-family="Inter,sans-serif">Hires</text>
 <rect x="292" y="8" width="10" height="10" rx="2" fill="#ef444488"/>
@@ -790,7 +811,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <text x="245.4082169746112" y="823.4" font-size="9.5" fill="#5a7a94" font-family="Inter,sans-serif">0.5M</text>
 <rect x="10" y="786" width="748" height="36" fill="transparent" onmouseover="showTip(event,'Legal: 0.5M hires vs 0.5M separations in 2025. Hire rate: 0.37x. Net: +17K — workforce is growing.')" style="cursor:default"/>
 </svg></div>
-    <div class="card"><h3>Annual hire rate (hires ÷ jobs)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Hire rate per job</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Annual hire rate (hires ÷ jobs)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Hire rate per job</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="670" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="690" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">0.00×</text>
 <line x1="348" y1="10" x2="348" y2="670" stroke="#eef2f7" stroke-width="1"/>
@@ -892,7 +913,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <rect x="10" y="640" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Architecture &amp; Engineering hire rate: 0.34x — for every 1 job, 0.34 hires occur annually. Below 1x means hiring volume is less than total workforce. Total hires: 0.9M.')" style="cursor:default"/>
 </svg></div>
   </div>
-  <div class="card"><h3>Net hires (hires − separations, thousands)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Net positive (hires &gt; seps)</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Net negative</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+  <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Net hires (hires − separations, thousands)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Net positive (hires &gt; seps)</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Net negative</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="670" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="690" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">0</text>
 <line x1="348" y1="10" x2="348" y2="670" stroke="#eef2f7" stroke-width="1"/>
@@ -998,7 +1019,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <div class="pg" id="pg-growth">
   <div class="ph"><h2>Growth projections 2025–2030</h2><p>Fastest and slowest growing occupations with 50K+ jobs</p></div>
   <div class="g2">
-    <div class="card"><h3>Top 10 fastest growing occupations</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>% growth 2025–2030</div></div><svg viewBox="0 0 778 336" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:336px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Top 10 fastest growing occupations</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>% growth 2025–2030</div></div><svg viewBox="0 0 778 336" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:336px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="310" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="330" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">+0.0%</text>
 <line x1="348" y1="10" x2="348" y2="310" stroke="#eef2f7" stroke-width="1"/>
@@ -1051,7 +1072,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <text x="438.48" y="299" font-size="10.5" fill="#5a7a94" font-family="Inter,sans-serif">+12.8%</text>
 <rect x="10" y="280" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Occupational Therapy Assistants: +12.8% projected growth 2025–2030 — one of the fastest-growing occupations. Employment: 51K jobs. Median wage: $68,349. Education: Associate&#39;s degree.')" style="cursor:default"/>
 </svg></div>
-    <div class="card"><h3>Top 10 slowest / declining occupations</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Positive growth</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Declining</div></div><svg viewBox="0 0 778 336" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:336px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Top 10 slowest / declining occupations</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Positive growth</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Declining</div></div><svg viewBox="0 0 778 336" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:336px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="310" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="330" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">+0.0%</text>
 <line x1="348" y1="10" x2="348" y2="310" stroke="#eef2f7" stroke-width="1"/>
@@ -1105,14 +1126,14 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <rect x="10" y="280" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Tool and Die Makers: -3.8% projected change 2025–2030 — declining, job losses likely — consider retraining pathways. Employment: 55K jobs. Median wage: $63,190.')" style="cursor:default"/>
 </svg></div>
   </div>
-  <div class="card"><h3>Growth % vs. median wage — bubble size = employment</h3>
+  <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Growth % vs. median wage — bubble size = employment</h3>
     <div class="ch h420"><canvas id="c-scatter"></canvas></div></div>
 </div>
 
 <div class="pg" id="pg-wocc">
   <div class="ph"><h2>Wages by occupation</h2><p>Median annual earnings</p></div>
   <div class="g2">
-    <div class="card"><h3>Median wage by major group</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Median annual wage</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Median wage by major group</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Median annual wage</div></div><svg viewBox="0 0 778 696" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:696px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="670" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="690" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">0</text>
 <line x1="348" y1="10" x2="348" y2="670" stroke="#eef2f7" stroke-width="1"/>
@@ -1213,7 +1234,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <text x="314.3208" y="659" font-size="10.5" fill="#5a7a94" font-family="Inter,sans-serif">$33K</text>
 <rect x="10" y="640" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Personal Care: median annual wage of $33,467 — lower-wage (&lt;$50K). Employment: 3.8M workers. Projected growth: +5.5% by 2030.')" style="cursor:default"/>
 </svg></div>
-    <div class="card"><h3>Top 15 highest-wage occupations (50K+ jobs)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#7c3aed"></div>High-wage occupations</div></div><svg viewBox="0 0 778 486" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:486px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Top 15 highest-wage occupations (50K+ jobs)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#7c3aed"></div>High-wage occupations</div></div><svg viewBox="0 0 778 486" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:486px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="460" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="480" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">0</text>
 <line x1="348" y1="10" x2="348" y2="460" stroke="#eef2f7" stroke-width="1"/>
@@ -1287,7 +1308,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <rect x="10" y="430" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Human Resources Managers: median annual wage of $140,026 — one of the highest-paying occupations. 227K jobs. Education: Bachelor&#39;s degree. Projected growth: +5.1% by 2030.')" style="cursor:default"/>
 </svg></div>
   </div>
-  <div class="card"><h3>Median wage by entry-level education required</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Median wage by education level</div></div><svg viewBox="0 0 778 276" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:276px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+  <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Median wage by entry-level education required</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Median wage by education level</div></div><svg viewBox="0 0 778 276" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:276px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="250" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="270" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">0</text>
 <line x1="348" y1="10" x2="348" y2="250" stroke="#eef2f7" stroke-width="1"/>
@@ -1337,7 +1358,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <div class="pg" id="pg-wind">
   <div class="ph"><h2>Wages by industry</h2><p>Average earnings per job by NAICS sector</p></div>
   <div class="g2">
-    <div class="card"><h3>Avg. earnings per job ($K)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#7c3aed"></div>High earnings (&gt;$150K)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Mid earnings ($80–150K)</div><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Lower earnings (&lt;$80K)</div></div><svg viewBox="0 0 778 636" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:636px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Avg. earnings per job ($K)</h3><div class="leg"><div class="leg-i"><div class="leg-d" style="background:#7c3aed"></div>High earnings (&gt;$150K)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Mid earnings ($80–150K)</div><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Lower earnings (&lt;$80K)</div></div><svg viewBox="0 0 778 636" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:636px;display:block;overflow:visible" class="svgbar" onmouseleave="hideTip()">
 <line x1="228" y1="10" x2="228" y2="610" stroke="#eef2f7" stroke-width="1"/>
 <text x="228" y="630" text-anchor="middle" font-size="10" fill="#8ca0b3" font-family="Inter,sans-serif">0</text>
 <line x1="348" y1="10" x2="348" y2="610" stroke="#eef2f7" stroke-width="1"/>
@@ -1430,7 +1451,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 <text x="289.6448" y="599" font-size="10.5" fill="#5a7a94" font-family="Inter,sans-serif">$35K</text>
 <rect x="10" y="580" width="768" height="30" fill="transparent" onmouseover="showTip(event,'Accommodation &amp; Food: avg. earnings of $34,778 per job — lower-earning (&lt;$80K). Reflects the occupation mix within this sector. 14.2M workers, turnover rate 1.05x.')" style="cursor:default"/>
 </svg></div>
-    <div class="card"><h3>Earnings vs. turnover rate — bubble size = employment</h3>
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>Earnings vs. turnover rate — bubble size = employment</h3>
       <div class="leg"><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Industry sector</div><span class="leg-note">Bubble size = employment</span></div>
       <div class="ch h420"><canvas id="c-iturn"></canvas></div></div>
   </div>
@@ -1441,12 +1462,12 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
     <p>Workforce composition — <span style="color:#1a7fc1;font-weight:500">updates live with all filters</span></p>
   </div>
   <div class="g12">
-    <div class="card">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <h3>Age distribution (workers in millions)</h3>
       <div class="leg"><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Workers (millions)</div></div>
       <div class="ch h260"><canvas id="c-age-bar"></canvas></div>
     </div>
-    <div class="card">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <h3>Gender split</h3>
       <div class="leg"><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Female</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Male</div></div>
       <div style="position:relative">
@@ -1458,7 +1479,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
       </div>
     </div>
   </div>
-  <div class="card">
+  <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
     <h3>Age composition by major occupational group (%)</h3>
     <div class="leg"><span class="leg-note">Color intensity = share within that age band</span></div>
     <div style="overflow-x:auto" id="age-heat"><p style="color:#8ca0b3;padding:16px">Loading…</p></div>
@@ -1471,7 +1492,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
   </div>
   <div class="leg"><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>White</div><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>Hispanic/Latino</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Black/Afr. Am.</div><div class="leg-i"><div class="leg-d" style="background:#7c3aed"></div>Asian</div><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Other</div></div>
   <div class="g2">
-    <div class="card">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <h3>Workforce composition</h3>
       <div style="position:relative">
         <div class="ch h300"><canvas id="c-race-pie"></canvas></div>
@@ -1481,13 +1502,13 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
         </div>
       </div>
     </div>
-    <div class="card">
+    <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <h3>Diversity share by major group (% non-white)</h3>
       <div class="leg"><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>&gt;50% diverse</div><div class="leg-i"><div class="leg-d" style="background:#f79009"></div>40–50%</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>&lt;40%</div></div>
       <div id="div-bar-wrap"><p style="color:#8ca0b3;padding:16px">Loading…</p></div>
     </div>
   </div>
-  <div class="card">
+  <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
     <h3>Race/ethnicity breakdown by major group (stacked %)</h3>
     <div id="race-stack-wrap"><p style="color:#8ca0b3;padding:16px">Loading…</p></div>
   </div>
@@ -1498,8 +1519,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
     <p>Bubble size = 2025 employment · X = 5-year projected growth · Y = avg. earnings per job · Hover for details</p>
   </div>
   <div class="leg"><div class="leg-i"><div class="leg-d" style="background:#12b76a"></div>Above-avg growth (&gt;4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#1a7fc1"></div>Moderate growth (1.5–4.5%)</div><div class="leg-i"><div class="leg-d" style="background:#ef4444"></div>Slow growth (&lt;1.5%)</div><span class="leg-note">Bubble size = employment</span></div>
-  <div class="card"><div class="ch h540"><canvas id="c-bubble"></canvas></div></div>
-  <div class="card"><h3>All sectors — detail</h3><div class="tbl-wrap"><table><thead><tr><th>Sector</th><th>Jobs (2025)</th><th>Jobs (2030)</th><th>Growth</th><th>Avg Earnings</th><th>Turnover</th></tr></thead><tbody><tr><td>Other</td><td>25.8M</td><td>26.4M</td><td><span class="badge nt">+2.3%</span></td><td>$97K</td><td>0.37×</td></tr><tr><td>Health Care &amp; Social Assistance</td><td>23.1M</td><td>25.1M</td><td><span class="badge up">+8.5%</span></td><td>$79K</td><td>0.51×</td></tr><tr><td>Retail Trade</td><td>15.4M</td><td>15.6M</td><td><span class="badge nt">+1.1%</span></td><td>$53K</td><td>0.70×</td></tr><tr><td>Accommodation &amp; Food</td><td>14.2M</td><td>14.9M</td><td><span class="badge up">+4.7%</span></td><td>$35K</td><td>1.05×</td></tr><tr><td>Manufacturing</td><td>12.7M</td><td>13.0M</td><td><span class="badge nt">+2.7%</span></td><td>$109K</td><td>0.37×</td></tr><tr><td>Professional &amp; Technical</td><td>10.8M</td><td>11.6M</td><td><span class="badge up">+7.1%</span></td><td>$153K</td><td>0.46×</td></tr><tr><td>Admin Support</td><td>9.1M</td><td>9.3M</td><td><span class="badge nt">+2.5%</span></td><td>$70K</td><td>1.29×</td></tr><tr><td>Construction</td><td>8.4M</td><td>8.9M</td><td><span class="badge up">+5.8%</span></td><td>$98K</td><td>0.69×</td></tr><tr><td>Other Services</td><td>7.1M</td><td>7.4M</td><td><span class="badge nt">+4.4%</span></td><td>$50K</td><td>0.61×</td></tr><tr><td>Transportation &amp; Warehousing</td><td>6.9M</td><td>7.3M</td><td><span class="badge up">+6.3%</span></td><td>$84K</td><td>0.70×</td></tr><tr><td>Finance &amp; Insurance</td><td>6.8M</td><td>7.1M</td><td><span class="badge nt">+4.3%</span></td><td>$173K</td><td>0.35×</td></tr><tr><td>Wholesale Trade</td><td>6.1M</td><td>6.3M</td><td><span class="badge nt">+4.0%</span></td><td>$121K</td><td>0.38×</td></tr><tr><td>Educational Services</td><td>4.3M</td><td>4.5M</td><td><span class="badge up">+4.8%</span></td><td>$67K</td><td>0.55×</td></tr><tr><td>Information</td><td>2.9M</td><td>3.0M</td><td><span class="badge up">+5.0%</span></td><td>$219K</td><td>0.47×</td></tr><tr><td>Arts &amp; Recreation</td><td>2.7M</td><td>2.9M</td><td><span class="badge up">+7.1%</span></td><td>$62K</td><td>1.04×</td></tr><tr><td>Management of Companies</td><td>2.6M</td><td>2.7M</td><td><span class="badge up">+5.5%</span></td><td>$194K</td><td>0.36×</td></tr><tr><td>Real Estate</td><td>2.5M</td><td>2.6M</td><td><span class="badge up">+4.7%</span></td><td>$90K</td><td>0.51×</td></tr><tr><td>Agriculture</td><td>1.5M</td><td>1.6M</td><td><span class="badge nt">+3.2%</span></td><td>$56K</td><td>1.51×</td></tr><tr><td>Utilities</td><td>0.6M</td><td>0.6M</td><td><span class="badge up">+6.3%</span></td><td>$180K</td><td>0.21×</td></tr><tr><td>Mining &amp; Oil/Gas</td><td>0.6M</td><td>0.6M</td><td><span class="badge nt">+1.4%</span></td><td>$159K</td><td>0.47×</td></tr></tbody></table></div></div>
+  <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><div class="ch h540"><canvas id="c-bubble"></canvas></div></div>
+  <div class="card"><button class="export-btn" title="Export as PNG" onclick="exportCard(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><h3>All sectors — detail</h3><div class="tbl-wrap"><table><thead><tr><th>Sector</th><th>Jobs (2025)</th><th>Jobs (2030)</th><th>Growth</th><th>Avg Earnings</th><th>Turnover</th></tr></thead><tbody><tr><td>Other</td><td>25.8M</td><td>26.4M</td><td><span class="badge nt">+2.3%</span></td><td>$97K</td><td>0.37×</td></tr><tr><td>Health Care &amp; Social Assistance</td><td>23.1M</td><td>25.1M</td><td><span class="badge up">+8.5%</span></td><td>$79K</td><td>0.51×</td></tr><tr><td>Retail Trade</td><td>15.4M</td><td>15.6M</td><td><span class="badge nt">+1.1%</span></td><td>$53K</td><td>0.70×</td></tr><tr><td>Accommodation &amp; Food</td><td>14.2M</td><td>14.9M</td><td><span class="badge up">+4.7%</span></td><td>$35K</td><td>1.05×</td></tr><tr><td>Manufacturing</td><td>12.7M</td><td>13.0M</td><td><span class="badge nt">+2.7%</span></td><td>$109K</td><td>0.37×</td></tr><tr><td>Professional &amp; Technical</td><td>10.8M</td><td>11.6M</td><td><span class="badge up">+7.1%</span></td><td>$153K</td><td>0.46×</td></tr><tr><td>Admin Support</td><td>9.1M</td><td>9.3M</td><td><span class="badge nt">+2.5%</span></td><td>$70K</td><td>1.29×</td></tr><tr><td>Construction</td><td>8.4M</td><td>8.9M</td><td><span class="badge up">+5.8%</span></td><td>$98K</td><td>0.69×</td></tr><tr><td>Other Services</td><td>7.1M</td><td>7.4M</td><td><span class="badge nt">+4.4%</span></td><td>$50K</td><td>0.61×</td></tr><tr><td>Transportation &amp; Warehousing</td><td>6.9M</td><td>7.3M</td><td><span class="badge up">+6.3%</span></td><td>$84K</td><td>0.70×</td></tr><tr><td>Finance &amp; Insurance</td><td>6.8M</td><td>7.1M</td><td><span class="badge nt">+4.3%</span></td><td>$173K</td><td>0.35×</td></tr><tr><td>Wholesale Trade</td><td>6.1M</td><td>6.3M</td><td><span class="badge nt">+4.0%</span></td><td>$121K</td><td>0.38×</td></tr><tr><td>Educational Services</td><td>4.3M</td><td>4.5M</td><td><span class="badge up">+4.8%</span></td><td>$67K</td><td>0.55×</td></tr><tr><td>Information</td><td>2.9M</td><td>3.0M</td><td><span class="badge up">+5.0%</span></td><td>$219K</td><td>0.47×</td></tr><tr><td>Arts &amp; Recreation</td><td>2.7M</td><td>2.9M</td><td><span class="badge up">+7.1%</span></td><td>$62K</td><td>1.04×</td></tr><tr><td>Management of Companies</td><td>2.6M</td><td>2.7M</td><td><span class="badge up">+5.5%</span></td><td>$194K</td><td>0.36×</td></tr><tr><td>Real Estate</td><td>2.5M</td><td>2.6M</td><td><span class="badge up">+4.7%</span></td><td>$90K</td><td>0.51×</td></tr><tr><td>Agriculture</td><td>1.5M</td><td>1.6M</td><td><span class="badge nt">+3.2%</span></td><td>$56K</td><td>1.51×</td></tr><tr><td>Utilities</td><td>0.6M</td><td>0.6M</td><td><span class="badge up">+6.3%</span></td><td>$180K</td><td>0.21×</td></tr><tr><td>Mining &amp; Oil/Gas</td><td>0.6M</td><td>0.6M</td><td><span class="badge nt">+1.4%</span></td><td>$159K</td><td>0.47×</td></tr></tbody></table></div></div>
 </div>
 
 <div class="footer">Source: Lightcast Q2 2026 · 796 SOC occupations · 947 NAICS industries · U.S. National</div>
@@ -1801,7 +1822,7 @@ function drawScatter(){
   makeChart('c-scatter',{type:'bubble',
     data:{datasets:GL.map((g,i)=>({'label':g,'data':SD.filter(d=>d.group===g),'backgroundColor':PAL[i%PAL.length]+'88','borderColor':PAL[i%PAL.length],'borderWidth':1}))} ,
     options:{responsive:true,maintainAspectRatio:false,animation:false,
-      plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',font:{size:10},color:MU}},
+      plugins:{legend:{display:false},
         tooltip:{callbacks:{label:c=>{const d=c.raw;const gl=d.x>4.5?'above-avg growth':d.x<0?'declining':'moderate growth';return[d.desc,'Growth: '+d.x+'% ('+gl+')','Median wage: $'+(d.y*1000).toLocaleString(),'Jobs: '+(d.jobs/1e6).toFixed(2)+'M','Bubble size reflects employment volume.'];}}}},
       scales:{
         x:{grid:{color:GD},border:{display:false},ticks:{color:MU,font:{size:11},callback:v=>v+'%'},title:{display:true,text:'% growth 2025–2030',color:MU,font:{size:10}}},
@@ -1865,5 +1886,46 @@ function _moveTip(e){
   TIP.style.left=x+'px'; TIP.style.top=y+'px';
 }
 document.addEventListener('mousemove',e=>{if(TIP.style.display==='block')_moveTip(e);});
+
+// ── Export card as PNG ────────────────────────────────────────────────────────
+function exportCard(btn){
+  const card = btn.closest('.card');
+  const titleEl = card.querySelector('h3');
+  const title = titleEl ? titleEl.textContent.replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-').toLowerCase() : 'chart';
+  const filename = 'lmi-' + title.slice(0,40) + '.png';
+
+  btn.classList.add('busy');
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" stroke-dasharray="28 28" stroke-dashoffset="0"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle></svg>';
+
+  // Hide the button itself during capture so it doesn't appear in export
+  btn.style.display = 'none';
+
+  const scale = window.devicePixelRatio || 2;
+  html2canvas(card, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+    onclone(doc){
+      // Ensure SVG tooltip is hidden in clone
+      const tip = doc.getElementById('svg-tip');
+      if(tip) tip.style.display = 'none';
+      // Ensure export buttons are hidden in clone
+      doc.querySelectorAll('.export-btn').forEach(b => b.style.display='none');
+    }
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }).catch(err => {
+    console.warn('Export failed:', err);
+  }).finally(() => {
+    btn.style.display = '';
+    btn.classList.remove('busy');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  });
+}
+
 </script>
 </body></html>
